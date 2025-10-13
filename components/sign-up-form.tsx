@@ -34,7 +34,7 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError("Senhanhas não combinam");
       setIsLoading(false);
       return;
     }
@@ -50,7 +50,7 @@ export function SignUpForm({
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Aconteceu um erro...");
     } finally {
       setIsLoading(false);
     }
@@ -60,8 +60,8 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle className="text-2xl">Criar conta</CardTitle>
+          <CardDescription>Comece a crescer sua loja hoje mesmo com a gente.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -71,7 +71,7 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="exemplo.email@gmail.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -79,7 +79,7 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Senha</Label>
                 </div>
                 <Input
                   id="password"
@@ -91,7 +91,7 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <Label htmlFor="repeat-password">Repita a senha</Label>
                 </div>
                 <Input
                   id="repeat-password"
@@ -103,11 +103,11 @@ export function SignUpForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading ? "Criando conta..." : "Criar conta"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
+              Já possui uma conta?{" "}
               <Link href="/auth/login" className="underline underline-offset-4">
                 Login
               </Link>
