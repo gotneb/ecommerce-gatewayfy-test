@@ -1,8 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Sidebar from "@/components/sidebar";
 import ProductCard from "@/components/ProductCard";
+import EditProductModal from "@/components/EditProductModal";
 import { SquarePlus } from "lucide-react";
+
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  imageUrl?: string;
+}
 
 // TODO: Fetch from database
 const sampleProducts = [
@@ -30,9 +40,26 @@ const sampleProducts = [
 ];
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>(sampleProducts);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
   const handleEdit = (id: string) => {
-    console.log("Edit product:", id);
-    // TODO: Implement edit functionality
+    const product = products.find(p => p.id === id);
+    if (product) {
+      setSelectedProduct(product);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleSaveProduct = (updatedProduct: Product) => {
+    setProducts(prev => 
+      prev.map(product => 
+        product.id === updatedProduct.id ? updatedProduct : product
+      )
+    );
+    setIsEditModalOpen(false);
+    setSelectedProduct(null);
   };
 
   const handleDelete = (id: string) => {
@@ -65,7 +92,7 @@ export default function ProductsPage() {
         {/* Products Grid */}
         <div className="p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sampleProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
@@ -80,6 +107,17 @@ export default function ProductsPage() {
           </div>
         </div>
       </main>
+
+      {/* Edit Product Modal */}
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        product={selectedProduct}
+        onSave={handleSaveProduct}
+      />
     </div>
   );
 }
