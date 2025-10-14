@@ -5,6 +5,7 @@ import Sidebar from "@/components/sidebar";
 import ProductCard from "@/components/ProductCard";
 import EditProductModal from "@/components/EditProductModal";
 import DeleteProductModal from "@/components/DeleteProductModal";
+import AddProductModal from "@/components/AddProductModal";
 import { SquarePlus } from "lucide-react";
 
 interface Product {
@@ -44,6 +45,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>(sampleProducts);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleEdit = (id: string) => {
@@ -80,6 +82,24 @@ export default function ProductsPage() {
     }
   };
 
+  const handleAddProduct = (productData: {
+    title: string;
+    description: string;
+    price: string;
+    quantity: number;
+    imageUrl?: string;
+  }) => {
+    const newProduct: Product = {
+      id: (products.length + 1).toString(),
+      title: productData.title,
+      description: productData.description,
+      price: productData.price,
+      imageUrl: productData.imageUrl,
+    };
+    setProducts(prev => [...prev, newProduct]);
+    setIsAddModalOpen(false);
+  };
+
   return (
     <div className="bg-slate-950 flex">
       <Sidebar currentPath="/seller/products" />
@@ -95,7 +115,10 @@ export default function ProductsPage() {
                 ou até mesmo excluir.
               </p>
             </div>
-            <button className="text-white flex gap-2 bg-blue-500 px-6 py-4 rounded-xl hover:bg-blue-600 transition-colors">
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="text-white flex gap-2 bg-blue-500 px-6 py-4 rounded-xl hover:bg-blue-600 transition-colors"
+            >
               <SquarePlus />
               <h4 className="text-md">Add produto</h4>
             </button>
@@ -141,6 +164,13 @@ export default function ProductsPage() {
         }}
         productTitle={selectedProduct?.title}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* Add Product Modal */}
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddProduct={handleAddProduct}
       />
     </div>
   );
