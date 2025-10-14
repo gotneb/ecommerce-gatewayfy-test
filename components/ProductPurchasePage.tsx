@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { z } from "zod";
 
 interface Product {
   id: string;
@@ -16,8 +17,20 @@ interface ProductPurchasePageProps {
   product: Product;
 }
 
+// Zod validation schema
+const buyerInfoSchema = z.object({
+  fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("Email inválido"),
+  streetAddress: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
+  city: z.string().min(2, "Cidade deve ter pelo menos 2 caracteres"),
+  state: z.string().min(2, "Estado deve ter pelo menos 2 caracteres"),
+  zipCode: z.string().min(5, "CEP deve ter pelo menos 5 caracteres"),
+});
+
+type BuyerInfo = z.infer<typeof buyerInfoSchema>;
+
 export default function ProductPurchasePage({ product }: ProductPurchasePageProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BuyerInfo>({
     fullName: "",
     email: "",
     streetAddress: "",
@@ -26,17 +39,45 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
     zipCode: "",
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const [errors, setErrors] = useState<Partial<Record<keyof BuyerInfo, string>>>({});
+
+  const handleInputChange = (field: keyof BuyerInfo, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
   };
 
   const handleBuyNow = () => {
-    console.log("Processing purchase for:", product.id);
-    console.log("Buyer info:", formData);
-    // TODO: Implement payment processing
+    try {
+      // Validate form data
+      const validatedData = buyerInfoSchema.parse(formData);
+      
+      console.log("Processing purchase for:", product.id);
+      console.log("Validated buyer info:", validatedData);
+      
+      // TODO: Implement payment processing
+      alert("Compra processada com sucesso!");
+      
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Partial<Record<keyof BuyerInfo, string>> = {};
+        error.issues.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as keyof BuyerInfo] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    }
   };
 
   return (
@@ -94,9 +135,16 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
+                  className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none ${
+                    errors.fullName 
+                      ? "border-red-500 focus:border-red-500" 
+                      : "border-gray-600 focus:border-violet-500"
+                  }`}
                   placeholder="Digite seu nome completo"
                 />
+                {errors.fullName && (
+                  <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>
+                )}
               </div>
 
               {/* Email Address */}
@@ -108,9 +156,16 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
+                  className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none ${
+                    errors.email 
+                      ? "border-red-500 focus:border-red-500" 
+                      : "border-gray-600 focus:border-violet-500"
+                  }`}
                   placeholder="Digite seu endereço de email"
                 />
+                {errors.email && (
+                  <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+                )}
               </div>
 
               {/* Street Address */}
@@ -122,9 +177,16 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                   type="text"
                   value={formData.streetAddress}
                   onChange={(e) => handleInputChange("streetAddress", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
+                  className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none ${
+                    errors.streetAddress 
+                      ? "border-red-500 focus:border-red-500" 
+                      : "border-gray-600 focus:border-violet-500"
+                  }`}
                   placeholder="Digite seu endereço"
                 />
+                {errors.streetAddress && (
+                  <p className="text-red-400 text-xs mt-1">{errors.streetAddress}</p>
+                )}
               </div>
 
               {/* City and State */}
@@ -137,9 +199,16 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                     type="text"
                     value={formData.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
+                    className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none ${
+                      errors.city 
+                        ? "border-red-500 focus:border-red-500" 
+                        : "border-gray-600 focus:border-violet-500"
+                    }`}
                     placeholder="Digite sua cidade"
                   />
+                  {errors.city && (
+                    <p className="text-red-400 text-xs mt-1">{errors.city}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">
@@ -149,24 +218,38 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                     type="text"
                     value={formData.state}
                     onChange={(e) => handleInputChange("state", e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
+                    className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none ${
+                      errors.state 
+                        ? "border-red-500 focus:border-red-500" 
+                        : "border-gray-600 focus:border-violet-500"
+                    }`}
                     placeholder="Digite seu estado"
                   />
+                  {errors.state && (
+                    <p className="text-red-400 text-xs mt-1">{errors.state}</p>
+                  )}
                 </div>
               </div>
 
               {/* ZIP Code */}
               <div>
                 <label className="block text-white text-sm font-medium mb-2">
-                CEP
+                  CEP
                 </label>
                 <input
                   type="text"
                   value={formData.zipCode}
                   onChange={(e) => handleInputChange("zipCode", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
+                  className={`w-full bg-gray-800 border rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none ${
+                    errors.zipCode 
+                      ? "border-red-500 focus:border-red-500" 
+                      : "border-gray-600 focus:border-violet-500"
+                  }`}
                   placeholder="Digite seu CEP"
                 />
+                {errors.zipCode && (
+                  <p className="text-red-400 text-xs mt-1">{errors.zipCode}</p>
+                )}
               </div>
 
               {/* Buy Now Button */}
