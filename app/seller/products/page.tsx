@@ -6,6 +6,7 @@ import ProductCard from "@/components/ProductCard";
 import EditProductModal from "@/components/EditProductModal";
 import DeleteProductModal from "@/components/DeleteProductModal";
 import AddProductModal from "@/components/AddProductModal";
+import EmptyProductsState from "@/components/EmptyProductsState";
 import { SquarePlus } from "lucide-react";
 
 interface Product {
@@ -16,33 +17,8 @@ interface Product {
   imageUrl?: string;
 }
 
-// TODO: Fetch from database
-const sampleProducts = [
-  {
-    id: "1",
-    title: "Basic Plan",
-    description: "Ideal for small teams and startups getting off the ground.",
-    price: "$29/mo",
-    imageUrl: undefined, // Will show placeholder icon
-  },
-  {
-    id: "2",
-    title: "Premium Product",
-    description: "Perfect for established businesses looking to scale their operations.",
-    price: "$99/mo",
-    imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-  },
-  {
-    id: "3",
-    title: "Enterprise Solution",
-    description: "Comprehensive solution for large organizations with advanced needs.",
-    price: "$299/mo",
-    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-  },
-];
-
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(sampleProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -117,30 +93,33 @@ export default function ProductsPage() {
             </div>
             <button 
               onClick={() => setIsAddModalOpen(true)}
-              className="text-white flex gap-2 bg-blue-500 px-6 py-4 rounded-xl hover:bg-blue-600 transition-colors"
+              className="bg-violet-600 hover:bg-violet-700 text-white px-8 py-3 text-lg font-medium rounded-full shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
             >
               <SquarePlus />
-              <h4 className="text-md">Add produto</h4>
             </button>
           </div>
         </div>
         
-        {/* Products Grid */}
+        {/* Products Grid or Empty State */}
         <div className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                title={product.title}
-                description={product.description}
-                price={product.price}
-                imageUrl={product.imageUrl}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          {products.length === 0 ? (
+            <EmptyProductsState onAddProduct={() => setIsAddModalOpen(true)} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  title={product.title}
+                  description={product.description}
+                  price={product.price}
+                  imageUrl={product.imageUrl}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
