@@ -70,12 +70,12 @@ export default function OrdersTable({ orders, onOrderSelect }: OrdersTableProps)
                   className="w-4 h-4 text-violet-600 bg-gray-700 border-gray-600 rounded focus:ring-violet-500 focus:ring-2"
                 />
               </th>
-              <th className="px-6 py-4 text-left text-white font-medium">Order ID</th>
-              <th className="px-6 py-4 text-left text-white font-medium">Product</th>
-              <th className="px-6 py-4 text-left text-white font-medium">Buyer Name</th>
-              <th className="px-6 py-4 text-left text-white font-medium">Total Price</th>
-              <th className="px-6 py-4 text-left text-white font-medium">Payment Status</th>
-              <th className="px-6 py-4 text-left text-white font-medium">Actions</th>
+              <th className="px-6 py-4 text-left text-white font-medium">ID do pedido</th>
+              <th className="px-6 py-4 text-left text-white font-medium">Produto</th>
+              <th className="px-6 py-4 text-left text-white font-medium">Nome do comprador</th>
+              <th className="px-6 py-4 text-left text-white font-medium">Preço total</th>
+              <th className="px-6 py-4 text-left text-white font-medium">Status de pagamento</th>
+              <th className="px-6 py-4 text-left text-white font-medium">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
