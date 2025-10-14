@@ -23,7 +23,7 @@ const sampleOrders: Order[] = [
     productName: "SaaS Pro Plan",
     productType: "saas",
     buyerName: "John Doe",
-    totalPrice: "$99.99",
+    totalPrice: "99.99",
     paymentStatus: "pago",
   },
   {
@@ -31,7 +31,7 @@ const sampleOrders: Order[] = [
     productName: "E-commerce Widget",
     productType: "widget",
     buyerName: "Jane Smith",
-    totalPrice: "$49.99",
+    totalPrice: "49.99",
     paymentStatus: "pendente",
   },
   {
@@ -39,7 +39,7 @@ const sampleOrders: Order[] = [
     productName: "Analytics Plugin",
     productType: "plugin",
     buyerName: "Mike Johnson",
-    totalPrice: "$149.99",
+    totalPrice: "149.99",
     paymentStatus: "falhou",
   },
   {
@@ -47,7 +47,7 @@ const sampleOrders: Order[] = [
     productName: "SaaS Basic Plan",
     productType: "saas",
     buyerName: "Sarah Wilson",
-    totalPrice: "$29.99",
+    totalPrice: "29.99",
     paymentStatus: "pago",
   },
   {
@@ -55,7 +55,7 @@ const sampleOrders: Order[] = [
     productName: "Marketing Widget",
     productType: "widget",
     buyerName: "David Brown",
-    totalPrice: "$79.99",
+    totalPrice: "79.99",
     paymentStatus: "pendente",
   },
 ];

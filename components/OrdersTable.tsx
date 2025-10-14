@@ -99,7 +99,7 @@ export default function OrdersTable({ orders, onOrderSelect }: OrdersTableProps)
                   </div>
                 </td>
                 <td className="px-6 py-4 text-white">{order.buyerName}</td>
-                <td className="px-6 py-4 text-white">{order.totalPrice}</td>
+                <td className="px-6 py-4 text-white">R${order.totalPrice}</td>
                 <td className="px-6 py-4">
                   <StatusBadge status={order.paymentStatus}>
                     {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
