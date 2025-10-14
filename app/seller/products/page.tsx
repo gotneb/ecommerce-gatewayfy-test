@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "@/components/sidebar";
 import ProductCard from "@/components/ProductCard";
 import EditProductModal from "@/components/EditProductModal";
+import DeleteProductModal from "@/components/DeleteProductModal";
 import { SquarePlus } from "lucide-react";
 
 interface Product {
@@ -42,6 +43,7 @@ const sampleProducts = [
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>(sampleProducts);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleEdit = (id: string) => {
@@ -63,8 +65,19 @@ export default function ProductsPage() {
   };
 
   const handleDelete = (id: string) => {
-    console.log("Delete product:", id);
-    // TODO: Implement delete functionality
+    const product = products.find(p => p.id === id);
+    if (product) {
+      setSelectedProduct(product);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedProduct) {
+      setProducts(prev => prev.filter(product => product.id !== selectedProduct.id));
+      setIsDeleteModalOpen(false);
+      setSelectedProduct(null);
+    }
   };
 
   return (
@@ -117,6 +130,17 @@ export default function ProductsPage() {
         }}
         product={selectedProduct}
         onSave={handleSaveProduct}
+      />
+
+      {/* Delete Product Modal */}
+      <DeleteProductModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        productTitle={selectedProduct?.title}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );
