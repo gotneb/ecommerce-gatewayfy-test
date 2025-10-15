@@ -8,14 +8,7 @@ import DeleteProductModal from "@/components/DeleteProductModal";
 import AddProductModal from "@/components/AddProductModal";
 import EmptyProductsState from "@/components/EmptyProductsState";
 import { SquarePlus } from "lucide-react";
-
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  imageUrl?: string;
-}
+import { Product, CreateProductData } from "@/lib/products";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,10 +25,21 @@ export default function ProductsPage() {
     }
   };
 
-  const handleSaveProduct = (updatedProduct: Product) => {
+  const handleSaveProduct = (updatedProduct: any) => {
+    // Convert the old Product interface to our new Product interface
+    const mappedProduct: Product = {
+      id: updatedProduct.id,
+            user_id: selectedProduct?.user_id || "",
+      name: updatedProduct.title,
+      description: updatedProduct.description,
+      price: parseFloat(updatedProduct.price),
+      image_url: updatedProduct.imageUrl,
+      status: selectedProduct?.status || 'active'
+    };
+    
     setProducts(prev => 
       prev.map(product => 
-        product.id === updatedProduct.id ? updatedProduct : product
+        product.id === updatedProduct.id ? mappedProduct : product
       )
     );
     setIsEditModalOpen(false);
@@ -58,21 +62,8 @@ export default function ProductsPage() {
     }
   };
 
-  const handleAddProduct = (productData: {
-    title: string;
-    description: string;
-    price: string;
-    quantity: number;
-    imageUrl?: string;
-  }) => {
-    const newProduct: Product = {
-      id: (products.length + 1).toString(),
-      title: productData.title,
-      description: productData.description,
-      price: productData.price,
-      imageUrl: productData.imageUrl,
-    };
-    setProducts(prev => [...prev, newProduct]);
+  const handleAddProduct = (product: Product) => {
+    setProducts(prev => [...prev, product]);
     setIsAddModalOpen(false);
   };
 
@@ -110,10 +101,10 @@ export default function ProductsPage() {
                 <ProductCard
                   key={product.id}
                   id={product.id}
-                  title={product.title}
-                  description={product.description}
-                  price={product.price}
-                  imageUrl={product.imageUrl}
+                  title={product.name}
+                  description={product.description || ""}
+                  price={product.price.toString()}
+                  imageUrl={product.image_url}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                 />
@@ -130,7 +121,13 @@ export default function ProductsPage() {
           setIsEditModalOpen(false);
           setSelectedProduct(null);
         }}
-        product={selectedProduct}
+        product={selectedProduct ? {
+          id: selectedProduct.id,
+          title: selectedProduct.name,
+          description: selectedProduct.description || "",
+          price: selectedProduct.price.toString(),
+          imageUrl: selectedProduct.image_url
+        } : null}
         onSave={handleSaveProduct}
       />
 
@@ -141,7 +138,7 @@ export default function ProductsPage() {
           setIsDeleteModalOpen(false);
           setSelectedProduct(null);
         }}
-        productTitle={selectedProduct?.title}
+        productTitle={selectedProduct?.name}
         onConfirm={handleConfirmDelete}
       />
 
@@ -149,7 +146,19 @@ export default function ProductsPage() {
       <AddProductModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddProduct={handleAddProduct}
+        onAddProduct={(productData) => {
+          // Convert CreateProductData to Product-like object for local state
+          const newProduct: Product = {
+            id: Date.now().toString(), // Temporary ID until we get real one
+            user_id: "", // Will be set by service
+            name: productData.name,
+            description: productData.description,
+            price: productData.price,
+            image_url: productData.image_url,
+            status: productData.status || 'active'
+          };
+          handleAddProduct(newProduct);
+        }}
       />
     </div>
   );
