@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { productsService, CreateProductData } from "@/lib/products";
 
 interface Product {
   id: string;
@@ -16,7 +17,7 @@ interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product?: Product | null;
-  onSave: (productData: Product) => void;
+  onSave: (productData: any) => void;
 }
 
 export default function EditProductModal({
@@ -25,29 +26,76 @@ export default function EditProductModal({
   product,
   onSave,
 }: EditProductModalProps) {
-  const [formData, setFormData] = useState({
-    title: product?.title || "",
-    description: product?.description || "",
-    price: product?.price || "",
-    imageUrl: product?.imageUrl || "",
+  const [formData, setFormData] = useState<CreateProductData>({
+    name: "",
+    description: "",
+    price: 0,
+    image_url: "",
+    status: "active",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (product?.id) {
-      onSave({
-        id: product.id,
-        ...formData,
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Update form data when product changes
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.title,
+        description: product.description,
+        price: parseFloat(product.price) || 0,
+        image_url: product.imageUrl || "",
+        status: "active",
       });
-      onClose();
+    }
+  }, [product]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product?.id) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { product: updatedProduct, error } = await productsService.updateProduct(product.id, formData);
+      
+      if (error) {
+        setError(error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (updatedProduct) {
+        // Convert back to the old format for the parent component
+        onSave({
+          id: updatedProduct.id,
+          title: updatedProduct.name,
+          description: updatedProduct.description || "",
+          price: updatedProduct.price.toString(),
+          imageUrl: updatedProduct.image_url,
+        });
+        onClose();
+      }
+    } catch (err) {
+      setError("Erro inesperado ao atualizar produto");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof CreateProductData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const handlePriceChange = (value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    handleInputChange("price", numericValue);
   };
 
   if (!isOpen) return null;
@@ -83,7 +131,7 @@ export default function EditProductModal({
                   />
                   <button
                     type="button"
-                    onClick={() => handleInputChange("imageUrl", "")}
+                    onClick={() => handleInputChange("image_url", "")}
                     className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
                   >
                     <X className="w-4 h-4" />
@@ -99,30 +147,30 @@ export default function EditProductModal({
                 </button>
               )}
             </div>
-            {!formData.imageUrl && (
+            {!formData.image_url && (
               <div className="space-y-2">
                 <input
                   type="url"
                   placeholder="URL da imagem"
-                  value={formData.imageUrl}
-                  onChange={(e) => handleInputChange("imageUrl", e.target.value)}
+                  value={formData.image_url}
+                  onChange={(e) => handleInputChange("image_url", e.target.value)}
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
                 />
               </div>
             )}
           </div>
 
-          {/* Product Title */}
+          {/* Product Name */}
           <div className="space-y-2">
             <label className="text-white text-sm font-medium">
-              Título
+              Nome
             </label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-              placeholder="Título do produto"
+              placeholder="Nome do produto"
               required
             />
           </div>
@@ -148,14 +196,23 @@ export default function EditProductModal({
               Preço
             </label>
             <input
-              type="text"
+              type="number"
               value={formData.price}
-              onChange={(e) => handleInputChange("price", e.target.value)}
+              onChange={(e) => handlePriceChange(e.target.value)}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-              placeholder="Preço (e.x., R$29/mês)"
+              placeholder="Preço (ex: 29.99)"
+              step="0.01"
+              min="0"
               required
             />
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
@@ -163,15 +220,17 @@ export default function EditProductModal({
               type="button"
               variant="secondary"
               onClick={onClose}
-              className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+              disabled={isLoading}
+              className="bg-gray-700 hover:bg-gray-600 text-white border-0 disabled:opacity-50"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-violet-600 hover:bg-violet-700 text-white border-0"
+              disabled={isLoading}
+              className="bg-violet-600 hover:bg-violet-700 text-white border-0 disabled:opacity-50"
             >
-              Salvar mudanças
+              {isLoading ? "Salvando..." : "Salvar mudanças"}
             </Button>
           </div>
         </form>

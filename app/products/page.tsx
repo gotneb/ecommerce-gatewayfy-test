@@ -54,22 +54,8 @@ export default function ProductsPage() {
   };
 
   const handleSaveProduct = (updatedProduct: any) => {
-    // Convert the old Product interface to our new Product interface
-    const mappedProduct: Product = {
-      id: updatedProduct.id,
-            user_id: selectedProduct?.user_id || "",
-      name: updatedProduct.title,
-      description: updatedProduct.description,
-      price: parseFloat(updatedProduct.price),
-      image_url: updatedProduct.imageUrl,
-      status: selectedProduct?.status || 'active'
-    };
-    
-    setProducts(prev => 
-      prev.map(product => 
-        product.id === updatedProduct.id ? mappedProduct : product
-      )
-    );
+    // Refresh products list from database to get the updated product
+    loadProducts();
     setIsEditModalOpen(false);
     setSelectedProduct(null);
   };
