@@ -25,10 +25,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create payment intent
+    // Validate amount
+    const amountInCents = Math.round(product.price * 100);
+    if (amountInCents < 50) { // Minimum $0.50
+      return NextResponse.json(
+        { error: 'Amount too small. Minimum amount is $0.50' },
+        { status: 400 }
+      );
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(product.price * 100), // Convert to cents
-      currency: 'brl', // Brazilian Real
+      amount: amountInCents,
+      currency: 'brl',
       metadata: {
         productId: product.id,
         productName: product.name,
@@ -51,8 +59,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating payment intent:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    
+    let errorMessage = 'Internal server error';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
