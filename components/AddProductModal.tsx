@@ -1,19 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, Upload, Minus, Plus } from "lucide-react";
+import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { productsService, CreateProductData } from "@/lib/products";
 
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddProduct: (productData: {
-    title: string;
-    description: string;
-    price: string;
-    quantity: number;
-    imageUrl?: string;
-  }) => void;
+  onAddProduct: (productData: CreateProductData) => void;
 }
 
 export default function AddProductModal({
@@ -21,31 +16,31 @@ export default function AddProductModal({
   onClose,
   onAddProduct,
 }: AddProductModalProps) {
-  const [formData, setFormData] = useState({
-    title: "",
+  const [formData, setFormData] = useState<CreateProductData>({
+    name: "",
     description: "",
-    price: "0.00",
-    quantity: 1,
-    imageUrl: "",
+    price: 0,
+    image_url: "",
+    status: "active",
   });
 
   const [dragActive, setDragActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: keyof CreateProductData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
-  const handleQuantityChange = (operation: "increase" | "decrease") => {
-    setFormData(prev => ({
-      ...prev,
-      quantity: operation === "increase" 
-        ? prev.quantity + 1 
-        : Math.max(1, prev.quantity - 1)
-    }));
+  const handlePriceChange = (value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    handleInputChange("price", numericValue);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -58,37 +53,72 @@ export default function AddProductModal({
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // Simulate file handling
-      console.log("File dropped:", e.dataTransfer.files[0]);
-      // TODO: Implement actual file upload
+      await uploadFile(e.dataTransfer.files[0]);
     }
   };
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      console.log("File selected:", e.target.files[0]);
-      // TODO: Implement actual file upload
+      await uploadFile(e.target.files[0]);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadFile = async (file: File) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { url, error } = await productsService.uploadImage(file);
+      
+      if (error) {
+        setError(error);
+      } else if (url) {
+        handleInputChange("image_url", url);
+      }
+    } catch (err) {
+      setError("Erro inesperado ao fazer upload da imagem");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAddProduct(formData);
-    onClose();
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      price: "0.00",
-      quantity: 1,
-      imageUrl: "",
-    });
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { product, error } = await productsService.createProduct(formData);
+      
+      if (error) {
+        setError(error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (product) {
+        onAddProduct(product);
+        onClose();
+        // Reset form
+        setFormData({
+          name: "",
+          description: "",
+          price: 0,
+          image_url: "",
+          status: "active",
+        });
+      }
+    } catch (err) {
+      setError("Erro inesperado ao criar produto");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -125,42 +155,61 @@ export default function AddProductModal({
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-white text-sm mb-2">
-                Arraste e solte a imagem do produto aqui, ou clique para navegar.
-              </p>
-              <p className="text-gray-400 text-xs mb-4">
-                PNG, JPG, GIF up to 10MB
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileInput}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-gray-700 hover:bg-gray-600 text-white border-0"
-              >
-                Upload de imagem
-              </Button>
+              {formData.image_url ? (
+                <div className="relative w-full h-48">
+                  <img
+                    src={formData.image_url}
+                    alt="Product preview"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange("image_url", "")}
+                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-white text-sm mb-2">
+                    Arraste e solte a imagem do produto aqui, ou clique para navegar.
+                  </p>
+                  <p className="text-gray-400 text-xs mb-4">
+                    PNG, JPG, GIF up to 10MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+                  >
+                    Upload de imagem
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Product Title */}
+          {/* Product Name */}
           <div className="space-y-2">
             <label className="text-white text-sm font-medium">
-              Título
+              Nome
             </label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-              placeholder="Título do produto"
+              placeholder="Nome do produto"
               required
             />
           </div>
@@ -190,41 +239,25 @@ export default function AddProductModal({
                 $
               </span>
               <input
-                type="text"
+                type="number"
                 value={formData.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
+                onChange={(e) => handlePriceChange(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-600 rounded-lg pl-8 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
                 placeholder="0.00"
+                step="0.01"
+                min="0"
                 required
               />
             </div>
           </div>
 
-          {/* Quantity */}
-          <div className="space-y-2">
-            <label className="text-white text-sm font-medium">
-              Quantidade
-            </label>
-            <div className="flex items-center bg-gray-800 border border-gray-600 rounded-lg">
-              <button
-                type="button"
-                onClick={() => handleQuantityChange("decrease")}
-                className="p-3 text-white hover:bg-gray-700 rounded-l-lg transition-colors"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <div className="flex-1 text-center py-3 text-white font-medium">
-                {formData.quantity}
-              </div>
-              <button
-                type="button"
-                onClick={() => handleQuantityChange("increase")}
-                className="p-3 text-white hover:bg-gray-700 rounded-r-lg transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
-          </div>
+          )}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
@@ -232,15 +265,17 @@ export default function AddProductModal({
               type="button"
               variant="secondary"
               onClick={onClose}
-              className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+              disabled={isLoading}
+              className="bg-gray-700 hover:bg-gray-600 text-white border-0 disabled:opacity-50"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-violet-600 hover:bg-violet-700 text-white border-0"
+              disabled={isLoading}
+              className="bg-violet-600 hover:bg-violet-700 text-white border-0 disabled:opacity-50"
             >
-              Adicionar Produto
+              {isLoading ? "Criando..." : "Adicionar Produto"}
             </Button>
           </div>
         </form>

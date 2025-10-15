@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { productsService, CreateProductData } from "@/lib/products";
 
 interface Product {
   id: string;
@@ -16,7 +17,7 @@ interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product?: Product | null;
-  onSave: (productData: Product) => void;
+  onSave: (productData: any) => void;
 }
 
 export default function EditProductModal({
@@ -25,29 +26,123 @@ export default function EditProductModal({
   product,
   onSave,
 }: EditProductModalProps) {
-  const [formData, setFormData] = useState({
-    title: product?.title || "",
-    description: product?.description || "",
-    price: product?.price || "",
-    imageUrl: product?.imageUrl || "",
+  const [formData, setFormData] = useState<CreateProductData>({
+    name: "",
+    description: "",
+    price: 0,
+    image_url: "",
+    status: "active",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (product?.id) {
-      onSave({
-        id: product.id,
-        ...formData,
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update form data when product changes
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.title,
+        description: product.description,
+        price: parseFloat(product.price) || 0,
+        image_url: product.imageUrl || "",
+        status: "active",
       });
-      onClose();
+    }
+  }, [product]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product?.id) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { product: updatedProduct, error } = await productsService.updateProduct(product.id, formData);
+      
+      if (error) {
+        setError(error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (updatedProduct) {
+        // Convert back to the old format for the parent component
+        onSave({
+          id: updatedProduct.id,
+          title: updatedProduct.name,
+          description: updatedProduct.description || "",
+          price: updatedProduct.price.toString(),
+          imageUrl: updatedProduct.image_url,
+        });
+        onClose();
+      }
+    } catch (err) {
+      setError("Erro inesperado ao atualizar produto");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof CreateProductData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const handlePriceChange = (value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    handleInputChange("price", numericValue);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await uploadFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      await uploadFile(e.target.files[0]);
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { url, error } = await productsService.uploadImage(file);
+      
+      if (error) {
+        setError(error);
+      } else if (url) {
+        handleInputChange("image_url", url);
+      }
+    } catch (err) {
+      setError("Erro inesperado ao fazer upload da imagem");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -73,56 +168,72 @@ export default function EditProductModal({
             <label className="text-white text-sm font-medium">
               Imagem do produto
             </label>
-            <div className="bg-gray-800 border border-gray-600 rounded-lg h-48 flex items-center justify-center">
-              {formData.imageUrl ? (
-                <div className="relative w-full h-full">
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                dragActive 
+                  ? "border-violet-400 bg-violet-900/20" 
+                  : "border-gray-600"
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              {formData.image_url ? (
+                <div className="relative w-full h-48">
                   <img
-                    src={formData.imageUrl}
-                    alt="Product"
+                    src={formData.image_url}
+                    alt="Product preview"
                     className="w-full h-full object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() => handleInputChange("imageUrl", "")}
+                    onClick={() => handleInputChange("image_url", "")}
                     className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-                >
-                  <Upload className="w-5 h-5" />
-                  Upload de nova imagem
-                </button>
+                <>
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-white text-sm mb-2">
+                    Arraste e solte a imagem do produto aqui, ou clique para navegar.
+                  </p>
+                  <p className="text-gray-400 text-xs mb-4">
+                    PNG, JPG, GIF up to 10MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+                  >
+                    Upload de imagem
+                  </Button>
+                </>
               )}
             </div>
-            {!formData.imageUrl && (
-              <div className="space-y-2">
-                <input
-                  type="url"
-                  placeholder="URL da imagem"
-                  value={formData.imageUrl}
-                  onChange={(e) => handleInputChange("imageUrl", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-                />
-              </div>
-            )}
           </div>
 
-          {/* Product Title */}
+          {/* Product Name */}
           <div className="space-y-2">
             <label className="text-white text-sm font-medium">
-              Título
+              Nome
             </label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-              placeholder="Título do produto"
+              placeholder="Nome do produto"
               required
             />
           </div>
@@ -148,14 +259,23 @@ export default function EditProductModal({
               Preço
             </label>
             <input
-              type="text"
+              type="number"
               value={formData.price}
-              onChange={(e) => handleInputChange("price", e.target.value)}
+              onChange={(e) => handlePriceChange(e.target.value)}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-              placeholder="Preço (e.x., R$29/mês)"
+              placeholder="Preço (ex: 29.99)"
+              step="0.01"
+              min="0"
               required
             />
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
@@ -163,15 +283,17 @@ export default function EditProductModal({
               type="button"
               variant="secondary"
               onClick={onClose}
-              className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+              disabled={isLoading}
+              className="bg-gray-700 hover:bg-gray-600 text-white border-0 disabled:opacity-50"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-violet-600 hover:bg-violet-700 text-white border-0"
+              disabled={isLoading}
+              className="bg-violet-600 hover:bg-violet-700 text-white border-0 disabled:opacity-50"
             >
-              Salvar mudanças
+              {isLoading ? "Salvando..." : "Salvar mudanças"}
             </Button>
           </div>
         </form>
