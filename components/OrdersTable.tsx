@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MoreVertical, Package, Monitor, BarChart3, Box } from "lucide-react";
 import StatusBadge from "@/components/ui/status-badge";
 
@@ -90,7 +91,12 @@ export default function OrdersTable({ orders, onOrderSelect }: OrdersTableProps)
                   />
                 </td>
                 <td className="px-6 py-4">
-                  <span className="text-blue-400 font-medium">{order.id}</span>
+                  <Link 
+                    href={`/seller/orders/${order.id.replace('#', '')}`}
+                    className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                  >
+                    {order.id}
+                  </Link>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
