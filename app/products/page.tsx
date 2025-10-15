@@ -69,11 +69,10 @@ export default function ProductsPage() {
   };
 
   const handleConfirmDelete = () => {
-    if (selectedProduct) {
-      setProducts(prev => prev.filter(product => product.id !== selectedProduct.id));
-      setIsDeleteModalOpen(false);
-      setSelectedProduct(null);
-    }
+    // Refresh products list from database after successful deletion
+    loadProducts();
+    setIsDeleteModalOpen(false);
+    setSelectedProduct(null);
   };
 
   const handleAddProduct = (product: Product) => {
@@ -173,6 +172,7 @@ export default function ProductsPage() {
           setSelectedProduct(null);
         }}
         productTitle={selectedProduct?.name}
+        productId={selectedProduct?.id}
         onConfirm={handleConfirmDelete}
       />
 
