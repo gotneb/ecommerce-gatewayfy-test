@@ -59,7 +59,7 @@ export default function ProductCard({
         
         {/* Price */}
         <div className="text-2xl font-bold text-violet-600 mb-6">
-          {price}
+          R${price}
         </div>
       </div>
 
