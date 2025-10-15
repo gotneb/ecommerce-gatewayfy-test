@@ -1,4 +1,5 @@
 # 🛒 E-commerce Gateway
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-26" src="https://github.com/user-attachments/assets/ff44a56f-3ec3-4e98-9f89-99b0b7fb771a" />
 
 > Plataforma completa de e-commerce com pagamentos Stripe, autenticação Supabase e dashboard administrativo
 
@@ -86,12 +87,13 @@ Sistema de e-commerce full-stack desenvolvido com Next.js 15, oferecendo uma sol
 
 ## 📱 Screenshots
 
-*[Aqui serão inseridas suas screenshots 16:9]*
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-12-44" src="https://github.com/user-attachments/assets/2fd6c7ea-60f2-4d57-b9f6-c42b06f69d3e" />
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-09" src="https://github.com/user-attachments/assets/f26cb8e8-f6ba-4a16-9e7a-517cccbbe787" />
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-18" src="https://github.com/user-attachments/assets/a925710d-7241-462e-ac3b-dbe6b6754928" />
 
 ## 🔧 Configuração do Projeto
 
 ### Pré-requisitos
-- Node.js 18+
 - Conta Supabase
 - Conta Stripe
 
