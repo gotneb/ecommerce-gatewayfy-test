@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import ProductCard from "@/components/ProductCard";
 import EditProductModal from "@/components/EditProductModal";
@@ -8,14 +8,42 @@ import DeleteProductModal from "@/components/DeleteProductModal";
 import AddProductModal from "@/components/AddProductModal";
 import EmptyProductsState from "@/components/EmptyProductsState";
 import { SquarePlus } from "lucide-react";
-import { Product, CreateProductData } from "@/lib/products";
+import { Product, CreateProductData, productsService } from "@/lib/products";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Load products on component mount
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { products: fetchedProducts, error } = await productsService.getProducts();
+      
+      if (error) {
+        setError(error);
+        console.error('Error loading products:', error);
+      } else {
+        setProducts(fetchedProducts || []);
+      }
+    } catch (err) {
+      setError('Erro inesperado ao carregar produtos');
+      console.error('Unexpected error loading products:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEdit = (id: string) => {
     const product = products.find(p => p.id === id);
@@ -63,7 +91,8 @@ export default function ProductsPage() {
   };
 
   const handleAddProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
+    // Refresh products list from database to get the real product with ID
+    loadProducts();
     setIsAddModalOpen(false);
   };
 
@@ -91,9 +120,28 @@ export default function ProductsPage() {
           </div>
         </div>
         
-        {/* Products Grid or Empty State */}
+        {/* Products Grid, Loading, Error, or Empty State */}
         <div className="p-8">
-          {products.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600 mx-auto mb-4"></div>
+                <p className="text-gray-400">Carregando produtos...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md mx-auto">
+                <p className="text-red-400 mb-4">{error}</p>
+                <button
+                  onClick={loadProducts}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            </div>
+          ) : products.length === 0 ? (
             <EmptyProductsState onAddProduct={() => setIsAddModalOpen(true)} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
