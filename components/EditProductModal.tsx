@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { productsService, CreateProductData } from "@/lib/products";
@@ -36,6 +36,8 @@ export default function EditProductModal({
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update form data when product changes
   useEffect(() => {
@@ -98,6 +100,51 @@ export default function EditProductModal({
     handleInputChange("price", numericValue);
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await uploadFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      await uploadFile(e.target.files[0]);
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { url, error } = await productsService.uploadImage(file);
+      
+      if (error) {
+        setError(error);
+      } else if (url) {
+        handleInputChange("image_url", url);
+      }
+    } catch (err) {
+      setError("Erro inesperado ao fazer upload da imagem");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -121,12 +168,22 @@ export default function EditProductModal({
             <label className="text-white text-sm font-medium">
               Imagem do produto
             </label>
-            <div className="bg-gray-800 border border-gray-600 rounded-lg h-48 flex items-center justify-center">
-              {formData.imageUrl ? (
-                <div className="relative w-full h-full">
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                dragActive 
+                  ? "border-violet-400 bg-violet-900/20" 
+                  : "border-gray-600"
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              {formData.image_url ? (
+                <div className="relative w-full h-48">
                   <img
-                    src={formData.imageUrl}
-                    alt="Product"
+                    src={formData.image_url}
+                    alt="Product preview"
                     className="w-full h-full object-cover rounded-lg"
                   />
                   <button
@@ -138,26 +195,32 @@ export default function EditProductModal({
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-                >
-                  <Upload className="w-5 h-5" />
-                  Upload de nova imagem
-                </button>
+                <>
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-white text-sm mb-2">
+                    Arraste e solte a imagem do produto aqui, ou clique para navegar.
+                  </p>
+                  <p className="text-gray-400 text-xs mb-4">
+                    PNG, JPG, GIF up to 10MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+                  >
+                    Upload de imagem
+                  </Button>
+                </>
               )}
             </div>
-            {!formData.image_url && (
-              <div className="space-y-2">
-                <input
-                  type="url"
-                  placeholder="URL da imagem"
-                  value={formData.image_url}
-                  onChange={(e) => handleInputChange("image_url", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-                />
-              </div>
-            )}
           </div>
 
           {/* Product Name */}
