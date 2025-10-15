@@ -197,17 +197,6 @@ export default function AddProductModal({
                 </>
               )}
             </div>
-            {!formData.image_url && (
-              <div className="space-y-2">
-                <input
-                  type="url"
-                  placeholder="Ou digite a URL da imagem"
-                  value={formData.image_url}
-                  onChange={(e) => handleInputChange("image_url", e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-violet-500"
-                />
-              </div>
-            )}
           </div>
 
           {/* Product Name */}
