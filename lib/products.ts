@@ -204,6 +204,55 @@ export class ProductsService {
       return { error: 'Erro inesperado ao excluir produto' };
     }
   }
+
+  // Public method to fetch all active products (no authentication required)
+  async getAllActiveProducts(): Promise<{ products: Product[] | null, error: string | null }> {
+    try {
+      console.log('Fetching all active products for public display');
+
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all products:', error);
+        return { products: null, error: error.message };
+      }
+
+      console.log('Successfully fetched all products:', data?.length || 0);
+      return { products: data || [], error: null };
+    } catch (error) {
+      console.error('Unexpected error fetching all products:', error);
+      return { products: null, error: 'Erro inesperado ao carregar produtos' };
+    }
+  }
+
+  // Public method to fetch a single product by ID (no authentication required)
+  async getProductById(id: string): Promise<{ product: Product | null, error: string | null }> {
+    try {
+      console.log('Fetching product by ID:', id);
+
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .eq('status', 'active')
+        .single();
+
+      if (error) {
+        console.error('Error fetching product by ID:', error);
+        return { product: null, error: error.message };
+      }
+
+      console.log('Successfully fetched product:', data);
+      return { product: data, error: null };
+    } catch (error) {
+      console.error('Unexpected error fetching product by ID:', error);
+      return { product: null, error: 'Erro inesperado ao carregar produto' };
+    }
+  }
 }
 
 export const productsService = new ProductsService();
