@@ -1,109 +1,193 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# 🛒 E-commerce Gateway
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-26" src="https://github.com/user-attachments/assets/ff44a56f-3ec3-4e98-9f89-99b0b7fb771a" />
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+> Plataforma completa de e-commerce com pagamentos Stripe, autenticação Supabase e dashboard administrativo
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+## 📋 Visão Geral
 
-## Features
+Sistema de e-commerce full-stack desenvolvido com Next.js 15, oferecendo uma solução completa para vendas online com integração de pagamentos, gestão de produtos e dashboard administrativo em tempo real.
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+### ✨ Principais Funcionalidades
 
-## Demo
+- **🛍️ Catálogo de Produtos** - Interface responsiva para compra de produtos
+- **💳 Pagamentos Stripe** - Processamento seguro de pagamentos com webhooks
+- **👤 Autenticação** - Sistema de login/registro com Supabase Auth
+- **📊 Dashboard Admin** - Gestão completa de produtos e pedidos
+- **📱 Design Responsivo** - Interface moderna e adaptável
+- **🔒 Segurança** - Row Level Security (RLS) e validação Zod
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+## 🛠️ Stack Tecnológica
 
-## Deploy to Vercel
+### Frontend
+- **Next.js 15** - App Router, Server/Client Components
+- **TypeScript** - Tipagem estática e desenvolvimento seguro
+- **Tailwind CSS** - Styling utilitário e design system
+- **React Hook Form + Zod** - Validação de formulários
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### Backend & Banco
+- **Supabase** - Backend-as-a-Service
+  - PostgreSQL com RLS
+  - Auth com providers sociais
+  - Storage para upload de imagens
+  - Real-time subscriptions
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+### Pagamentos
+- **Stripe** - Processamento de pagamentos
+  - Payment Intents API
+  - Webhooks para confirmação
+  - Elementos seguros para cartão
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+### DevOps
+- **Vercel** - Deploy e hosting
+- **Environment Variables** - Configuração segura
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## 🏗️ Arquitetura
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   API Routes    │    │   Database      │
+│   (Next.js)     │◄──►│   (Next.js)     │◄──►│   (Supabase)    │
+│                 │    │                 │    │                 │
+│ • App Router    │    │ • Webhooks      │    │ • PostgreSQL    │
+│ • Client/Server │    │ • Auth API      │    │ • RLS Policies  │
+│ • Components    │    │ • Stripe API    │    │ • Real-time     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │   Stripe        │
+                       │   • Payments    │
+                       │   • Webhooks    │
+                       └─────────────────┘
+```
 
-## Clone and run locally
+## 🚀 Funcionalidades Implementadas
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+### Para Compradores
+- [x] Navegação por catálogo de produtos
+- [x] Página de detalhes do produto
+- [x] Formulário de compra com validação
+- [x] Processamento de pagamento seguro
+- [x] Confirmação de compra
 
-2. Create a Next.js app using the Supabase Starter template npx command
+### Para Vendedores
+- [x] Dashboard administrativo
+- [x] CRUD completo de produtos
+- [x] Upload de imagens
+- [x] Gestão de pedidos
+- [x] Visualização de estatísticas
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+### Técnicas
+- [x] Autenticação JWT com Supabase
+- [x] Row Level Security (RLS)
+- [x] Webhooks Stripe para sincronização
+- [x] Validação de dados com Zod
+- [x] Tratamento de erros robusto
+- [x] Loading states e feedback visual
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+## 📱 Screenshots
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-12-44" src="https://github.com/user-attachments/assets/2fd6c7ea-60f2-4d57-b9f6-c42b06f69d3e" />
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-09" src="https://github.com/user-attachments/assets/f26cb8e8-f6ba-4a16-9e7a-517cccbbe787" />
+<img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-18" src="https://github.com/user-attachments/assets/a925710d-7241-462e-ac3b-dbe6b6754928" />
 
-3. Use `cd` to change into the app's directory
+## 🔧 Configuração do Projeto
 
-   ```bash
-   cd with-supabase-app
-   ```
+### Pré-requisitos
+- Conta Supabase
+- Conta Stripe
 
-4. Rename `.env.example` to `.env.local` and update the following:
+### Variáveis de Ambiente
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+# Stripe
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+NEXT_STRIPE_SECRET_KEY=your_stripe_secret_key
+NEXT_STRIPE_WEBHOOK_SECRET=your_webhook_secret
+```
 
-5. You can now run the Next.js local development server:
+### Instalação
 
-   ```bash
-   npm run dev
-   ```
+```bash
+# Clone o repositório
+git clone [repository-url]
+cd ecommerce-gatewayfy-test
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+# Instale as dependências
+npm install
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+# Configure as variáveis de ambiente
+cp .env.example .env.local
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+# Execute o projeto
+npm run dev
+```
 
-## Feedback and issues
+## 🗃️ Estrutura do Banco
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### Tabelas Principais
+- **products** - Catálogo de produtos
+- **orders** - Pedidos e transações
+- **auth.users** - Usuários (Supabase Auth)
 
-## More Supabase examples
+### Políticas RLS
+- Acesso baseado em `user_id`
+- Isolamento de dados por vendedor
+- Webhooks com service role para operações administrativas
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## 🔄 Fluxo de Desenvolvimento
+
+```bash
+# Criar nova feature
+git checkout -b feature/nome-da-feature
+
+# Desenvolvimento...
+git add .
+git commit -m "feat: implementar nova funcionalidade"
+
+# Merge para dev
+git checkout dev
+git merge feature/nome-da-feature
+
+# Deploy estável para master
+git checkout master
+git merge dev
+git push origin master
+```
+
+## 🎯 Destaques Técnicos
+
+### Performance
+- **Server Components** para renderização otimizada
+- **Image Optimization** com Next.js
+- **Lazy Loading** de componentes
+- **Code Splitting** automático
+
+### Segurança
+- **RLS** em todas as tabelas
+- **Validação** de entrada com Zod
+- **Sanitização** de dados
+- **CORS** configurado
+
+### UX/UI
+- **Design System** consistente
+- **Loading States** em todas as operações
+- **Error Boundaries** para tratamento de erros
+- **Responsive Design** mobile-first
+
+## 📈 Próximos Passos
+
+- [ ] Implementar notificações em tempo real
+- [ ] Adicionar sistema de avaliações
+- [ ] Dashboard de analytics avançado
+- [ ] Integração com múltiplos gateways de pagamento
+- [ ] Sistema de cupons e promoções
+
+---
+
+**Desenvolvido com foco em escalabilidade, segurança e experiência do usuário.**
