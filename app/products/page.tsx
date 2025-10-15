@@ -78,7 +78,7 @@ export default function ProductsPage() {
 
   return (
     <div className="bg-slate-950 flex">
-      <Sidebar currentPath="/seller/products" />
+      <Sidebar currentPath="/products" />
       <main className="text-gray-400 w-full">
         <div className="border-b border-gray-800 px-8 py-5">
           <div className="flex items-center justify-between">

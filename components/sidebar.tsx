@@ -7,8 +7,8 @@ type SidebarProps = {
 
 export default function Sidebar({ currentPath }: SidebarProps) {
   const options = [
-    { name: "Produtos", icon: Package, path: "/seller/products" },
-    { name: "Pedidos", icon: FolderClock, path: "/seller/orders" },
+    { name: "Produtos", icon: Package, path: "/products" },
+    { name: "Pedidos", icon: FolderClock, path: "/orders" },
   ];
 
   return (
