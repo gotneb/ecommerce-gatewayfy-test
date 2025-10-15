@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
+import { getStripe } from "@/lib/stripe-client";
 
 interface Product {
   id: string;
@@ -40,6 +41,7 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof BuyerInfo, string>>>({});
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const handleInputChange = (field: keyof BuyerInfo, value: string) => {
     setFormData(prev => ({
@@ -56,16 +58,53 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
     }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     try {
       // Validate form data
       const validatedData = buyerInfoSchema.parse(formData);
       
-      console.log("Processing purchase for:", product.id);
-      console.log("Validated buyer info:", validatedData);
+      setIsProcessingPayment(true);
+      setErrors({});
       
-      // TODO: Implement payment processing
-      alert("Compra processada com sucesso!");
+      // Create payment intent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          buyerInfo: validatedData,
+        }),
+      });
+
+      const { clientSecret, error: apiError } = await response.json();
+
+      if (apiError || !clientSecret) {
+        throw new Error(apiError || 'Failed to create payment intent');
+      }
+
+      // Initialize Stripe
+      const stripe = await getStripe();
+      if (!stripe) {
+        throw new Error('Stripe failed to initialize');
+      }
+
+      // Confirm payment
+      const { error: stripeError } = await stripe.confirmPayment({
+        clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/buy/${product.id}?success=true`,
+        },
+        redirect: 'if_required',
+      });
+
+      if (stripeError) {
+        throw new Error(stripeError.message || 'Payment failed');
+      }
+
+      // Success - redirect to success page
+      window.location.href = `/buy/${product.id}?success=true`;
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -76,7 +115,12 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
           }
         });
         setErrors(fieldErrors);
+      } else {
+        console.error('Payment error:', error);
+        alert(`Erro no pagamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -255,9 +299,17 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
               {/* Buy Now Button */}
               <Button
                 onClick={handleBuyNow}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white py-4 text-lg font-medium rounded-lg"
+                disabled={isProcessingPayment}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white py-4 text-lg font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Comprar agora
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processando pagamento...
+                  </>
+                ) : (
+                  'Comprar agora'
+                )}
               </Button>
 
               {/* Security Message */}
