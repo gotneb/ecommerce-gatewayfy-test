@@ -134,7 +134,7 @@ npm run dev
 
 ### **Eventos Processados:**
 - ✅ **`payment_intent.succeeded`** - Cria pedido automaticamente
-- ⏳ **`payment_intent.payment_failed`** - *Em desenvolvimento*
+- ⏳ **`payment_intent.payment_failed`** - COnfigura pedido como falha ao pagar
 
 ### **Fluxo de Webhook:**
 1. **Pagamento confirmado** no Stripe
