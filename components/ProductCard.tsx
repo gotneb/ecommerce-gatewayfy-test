@@ -1,5 +1,6 @@
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface ProductCardProps {
   id: string;
@@ -25,9 +26,11 @@ export default function ProductCard({
       {/* Product Image Section */}
       <div className="bg-black h-48 flex items-center justify-center">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={title}
+            width={300}
+            height={192}
             className="w-full h-full object-cover"
           />
         ) : (

@@ -8,7 +8,7 @@ import DeleteProductModal from "@/components/DeleteProductModal";
 import AddProductModal from "@/components/AddProductModal";
 import EmptyProductsState from "@/components/EmptyProductsState";
 import { SquarePlus } from "lucide-react";
-import { Product, CreateProductData, productsService } from "@/lib/products";
+import { Product, productsService } from "@/lib/products";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -53,7 +53,7 @@ export default function ProductsPage() {
     }
   };
 
-  const handleSaveProduct = (updatedProduct: any) => {
+  const handleSaveProduct = () => {
     // Refresh products list from database to get the updated product
     loadProducts();
     setIsEditModalOpen(false);
@@ -75,7 +75,7 @@ export default function ProductsPage() {
     setSelectedProduct(null);
   };
 
-  const handleAddProduct = (product: Product) => {
+  const handleAddProduct = () => {
     // Refresh products list from database to get the real product with ID
     loadProducts();
     setIsAddModalOpen(false);
@@ -180,18 +180,8 @@ export default function ProductsPage() {
       <AddProductModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddProduct={(productData) => {
-          // Convert CreateProductData to Product-like object for local state
-          const newProduct: Product = {
-            id: Date.now().toString(), // Temporary ID until we get real one
-            user_id: "", // Will be set by service
-            name: productData.name,
-            description: productData.description,
-            price: productData.price,
-            image_url: productData.image_url,
-            status: productData.status || 'active'
-          };
-          handleAddProduct(newProduct);
+        onAddProduct={() => {
+          handleAddProduct();
         }}
       />
     </div>

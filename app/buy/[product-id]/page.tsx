@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductPurchasePage from "@/components/ProductPurchasePage";
 import { productsService } from "@/lib/products";
+import Link from "next/link";
 
 interface BuyProductPageProps {
   params: Promise<{
@@ -67,18 +68,18 @@ export default async function BuyProductPage({
               Você receberá um email de confirmação em breve.
             </p>
             <div className="space-y-3">
-              <a
+              <Link
                 href="/buy"
                 className="block bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Ver Mais Produtos
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/"
                 className="block bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Voltar ao Início
-              </a>
+              </Link>
             </div>
           </div>
         </div>

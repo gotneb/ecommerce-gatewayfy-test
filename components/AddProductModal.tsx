@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { productsService, CreateProductData } from "@/lib/products";
+import Image from "next/image";
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export default function AddProductModal({
       } else if (url) {
         handleInputChange("image_url", url);
       }
-    } catch (err) {
+    } catch {
       setError("Erro inesperado ao fazer upload da imagem");
     } finally {
       setIsLoading(false);
@@ -114,7 +115,7 @@ export default function AddProductModal({
           status: "active",
         });
       }
-    } catch (err) {
+    } catch {
       setError("Erro inesperado ao criar produto");
     } finally {
       setIsLoading(false);
@@ -157,9 +158,11 @@ export default function AddProductModal({
             >
               {formData.image_url ? (
                 <div className="relative w-full h-48">
-                  <img
+                  <Image
                     src={formData.image_url}
                     alt="Product preview"
+                    width={300}
+                    height={192}
                     className="w-full h-full object-cover rounded-lg"
                   />
                   <button

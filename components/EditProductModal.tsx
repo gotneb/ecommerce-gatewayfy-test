@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { productsService, CreateProductData } from "@/lib/products";
+import Image from "next/image";
 
 interface Product {
   id: string;
@@ -17,7 +18,7 @@ interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product?: Product | null;
-  onSave: (productData: any) => void;
+  onSave: () => void;
 }
 
 export default function EditProductModal({
@@ -69,17 +70,10 @@ export default function EditProductModal({
       }
 
       if (updatedProduct) {
-        // Convert back to the old format for the parent component
-        onSave({
-          id: updatedProduct.id,
-          title: updatedProduct.name,
-          description: updatedProduct.description || "",
-          price: updatedProduct.price.toString(),
-          imageUrl: updatedProduct.image_url,
-        });
+        onSave();
         onClose();
       }
-    } catch (err) {
+    } catch {
       setError("Erro inesperado ao atualizar produto");
     } finally {
       setIsLoading(false);
@@ -138,7 +132,7 @@ export default function EditProductModal({
       } else if (url) {
         handleInputChange("image_url", url);
       }
-    } catch (err) {
+    } catch {
       setError("Erro inesperado ao fazer upload da imagem");
     } finally {
       setIsLoading(false);
@@ -181,9 +175,11 @@ export default function EditProductModal({
             >
               {formData.image_url ? (
                 <div className="relative w-full h-48">
-                  <img
+                  <Image
                     src={formData.image_url}
                     alt="Product preview"
+                    width={300}
+                    height={192}
                     className="w-full h-full object-cover rounded-lg"
                   />
                   <button
