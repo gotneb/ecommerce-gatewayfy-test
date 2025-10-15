@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 const webhookSecret = process.env.NEXT_STRIPE_WEBHOOK_SECRET;
 
@@ -41,7 +41,11 @@ export async function POST(request: NextRequest) {
 
       // Create order in database
       try {
-        const supabase = await createClient();
+        // Use service role key to bypass RLS for webhook operations
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
         
         console.log('Supabase client created, fetching product:', metadata.productId);
         
