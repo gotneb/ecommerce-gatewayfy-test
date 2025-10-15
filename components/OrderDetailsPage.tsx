@@ -34,7 +34,7 @@ export default function OrderDetailsPage({ order }: OrderDetailsPageProps) {
         {/* Header */}
         <div className="mb-8">
           <Link 
-            href="/seller/orders" 
+            href="/orders" 
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />

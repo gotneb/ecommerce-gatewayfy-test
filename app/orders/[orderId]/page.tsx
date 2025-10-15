@@ -94,7 +94,7 @@ export default async function OrderDetailsRoute({ params }: OrderDetailsPageProp
   if (!order) {
     return (
       <div className="bg-slate-950 flex min-h-screen">
-        <Sidebar currentPath="/seller/orders" />
+        <Sidebar currentPath="/orders" />
         <div className="flex items-center justify-center w-full">
           <div className="text-center">
             <h1 className="text-white text-4xl font-bold mb-4">Pedido não encontrado</h1>
@@ -107,7 +107,7 @@ export default async function OrderDetailsRoute({ params }: OrderDetailsPageProp
 
   return (
     <div className="bg-slate-950 flex">
-      <Sidebar currentPath="/seller/orders" />
+      <Sidebar currentPath="/orders" />
       <main className="w-full">
         <OrderDetailsPage order={order} />
       </main>

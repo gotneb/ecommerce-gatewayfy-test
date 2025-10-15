@@ -92,7 +92,7 @@ export default function OrdersTable({ orders, onOrderSelect }: OrdersTableProps)
                 </td>
                 <td className="px-6 py-4">
                   <Link 
-                    href={`/seller/orders/${order.id.replace('#', '')}`}
+                    href={`/orders/${order.id.replace('#', '')}`}
                     className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
                   >
                     {order.id}

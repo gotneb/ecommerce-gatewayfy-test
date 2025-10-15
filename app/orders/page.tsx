@@ -92,7 +92,7 @@ export default function OrdersPage() {
 
   return (
     <div className="bg-slate-950 flex">
-      <Sidebar currentPath="/seller/orders" />
+      <Sidebar currentPath="/orders" />
       <main className="text-gray-400 w-full">
         {/* Header */}
         <div className="border-b border-gray-800 px-8 py-5">
