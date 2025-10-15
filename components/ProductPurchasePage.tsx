@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
+import { getStripe } from "@/lib/stripe-client";
+import { loadStripe } from '@stripe/stripe-js';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements
+} from '@stripe/react-stripe-js';
 
 interface Product {
   id: string;
@@ -29,6 +37,126 @@ const buyerInfoSchema = z.object({
 
 type BuyerInfo = z.infer<typeof buyerInfoSchema>;
 
+// Payment Form Component using Stripe Elements
+function PaymentForm({ product, buyerInfo, onSuccess }: { 
+  product: Product; 
+  buyerInfo: BuyerInfo; 
+  onSuccess: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      // Create payment intent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          buyerInfo: buyerInfo,
+        }),
+      });
+
+      const { clientSecret, error: apiError } = await response.json();
+
+      if (apiError || !clientSecret) {
+        throw new Error(apiError || 'Failed to create payment intent');
+      }
+
+      // Confirm payment with card element
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement)!,
+          billing_details: {
+            name: buyerInfo.fullName,
+            email: buyerInfo.email,
+            address: {
+              line1: buyerInfo.streetAddress,
+              city: buyerInfo.city,
+              state: buyerInfo.state,
+              postal_code: buyerInfo.zipCode,
+            },
+          },
+        },
+      });
+
+      if (stripeError) {
+        setError(stripeError.message || 'Payment failed');
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onSuccess();
+      } else {
+        setError('Payment was not completed successfully');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Card Element */}
+      <div>
+        <label className="block text-white text-sm font-medium mb-2">
+          Dados do cartão
+        </label>
+        <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#ffffff',
+                  '::placeholder': {
+                    color: '#9CA3AF',
+                  },
+                },
+                invalid: {
+                  color: '#EF4444',
+                },
+              },
+            }}
+          />
+        </div>
+        {error && (
+          <p className="text-red-400 text-xs mt-2">{error}</p>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        disabled={!stripe || isProcessing}
+        className="w-full bg-violet-600 hover:bg-violet-700 text-white py-4 text-lg font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            Processando pagamento...
+          </>
+        ) : (
+          'Comprar agora'
+        )}
+      </Button>
+    </form>
+  );
+}
+
 export default function ProductPurchasePage({ product }: ProductPurchasePageProps) {
   const [formData, setFormData] = useState<BuyerInfo>({
     fullName: "",
@@ -40,6 +168,7 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof BuyerInfo, string>>>({});
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const handleInputChange = (field: keyof BuyerInfo, value: string) => {
     setFormData(prev => ({
@@ -56,16 +185,13 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
     }
   };
 
-  const handleBuyNow = () => {
+  const handleContinueToPayment = () => {
     try {
       // Validate form data
       const validatedData = buyerInfoSchema.parse(formData);
       
-      console.log("Processing purchase for:", product.id);
-      console.log("Validated buyer info:", validatedData);
-      
-      // TODO: Implement payment processing
-      alert("Compra processada com sucesso!");
+      setErrors({});
+      setShowPaymentForm(true);
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -78,6 +204,10 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
         setErrors(fieldErrors);
       }
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    window.location.href = `/buy/${product.id}?success=true`;
   };
 
   return (
@@ -123,9 +253,12 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
 
           {/* Buyer Information Form - Right Section */}
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-8">
-            <h2 className="text-white text-2xl font-bold mb-6">Informações do comprador</h2>
+            <h2 className="text-white text-2xl font-bold mb-6">
+              {showPaymentForm ? 'Pagamento' : 'Informações do comprador'}
+            </h2>
             
-            <div className="space-y-6">
+            {!showPaymentForm ? (
+              <div className="space-y-6">
               {/* Full Name */}
               <div>
                 <label className="block text-white text-sm font-medium mb-2">
@@ -252,12 +385,12 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                 )}
               </div>
 
-              {/* Buy Now Button */}
+              {/* Continue to Payment Button */}
               <Button
-                onClick={handleBuyNow}
+                onClick={handleContinueToPayment}
                 className="w-full bg-violet-600 hover:bg-violet-700 text-white py-4 text-lg font-medium rounded-lg"
               >
-                Comprar agora
+                Continuar para Pagamento
               </Button>
 
               {/* Security Message */}
@@ -265,7 +398,16 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
                 <Lock className="w-4 h-4" />
                 <span>Pagamento seguro via Stripe</span>
               </div>
-            </div>
+              </div>
+            ) : (
+              <Elements stripe={getStripe()}>
+                <PaymentForm 
+                  product={product} 
+                  buyerInfo={formData} 
+                  onSuccess={handlePaymentSuccess}
+                />
+              </Elements>
+            )}
           </div>
         </div>
       </div>
