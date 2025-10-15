@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Product, productsService } from "@/lib/products";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function BuyPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -99,9 +100,11 @@ export default function BuyPage() {
                       {/* Product Image */}
                       <div className="mb-6">
                         {product.image_url ? (
-                          <img
+                          <Image
                             src={product.image_url}
                             alt={product.name}
+                            width={300}
+                            height={192}
                             className="w-full h-48 object-cover rounded-lg"
                           />
                         ) : (

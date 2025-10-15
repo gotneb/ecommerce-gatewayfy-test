@@ -43,7 +43,7 @@ export default function DeleteProductModal({
       // Success - call the parent's onConfirm to refresh the list
       onConfirm();
       onClose();
-    } catch (err) {
+    } catch {
       setError("Erro inesperado ao excluir produto");
     } finally {
       setIsLoading(false);
@@ -69,9 +69,9 @@ export default function DeleteProductModal({
             Você tem certeza que deseja deletar este produto? Esta ação não pode ser desfeita.
           </p>
           {productTitle && (
-            <p className="text-violet-400 text-sm mt-2 font-medium">
-              "{productTitle}"
-            </p>
+          <p className="text-violet-400 text-sm mt-2 font-medium">
+            &ldquo;{productTitle}&rdquo;
+          </p>
           )}
         </div>
 
