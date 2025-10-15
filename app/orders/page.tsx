@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import OrdersTable from "@/components/OrdersTable";
 import Pagination from "@/components/ui/pagination";
 import { Search, Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Order, ordersService } from "@/lib/orders";
 
-interface Order {
+interface TableOrder {
   id: string;
   productName: string;
   productType: string;
@@ -16,59 +17,60 @@ interface Order {
   paymentStatus: "pago" | "pendente" | "falhou";
 }
 
-// TODO: Fetch orders from database, this is just sample data
-const sampleOrders: Order[] = [
-  {
-    id: "#ORD-12345",
-    productName: "SaaS Pro Plan",
-    productType: "saas",
-    buyerName: "John Doe",
-    totalPrice: "99.99",
-    paymentStatus: "pago",
-  },
-  {
-    id: "#ORD-12346",
-    productName: "E-commerce Widget",
-    productType: "widget",
-    buyerName: "Jane Smith",
-    totalPrice: "49.99",
-    paymentStatus: "pendente",
-  },
-  {
-    id: "#ORD-12347",
-    productName: "Analytics Plugin",
-    productType: "plugin",
-    buyerName: "Mike Johnson",
-    totalPrice: "149.99",
-    paymentStatus: "falhou",
-  },
-  {
-    id: "#ORD-12348",
-    productName: "SaaS Basic Plan",
-    productType: "saas",
-    buyerName: "Sarah Wilson",
-    totalPrice: "29.99",
-    paymentStatus: "pago",
-  },
-  {
-    id: "#ORD-12349",
-    productName: "Marketing Widget",
-    productType: "widget",
-    buyerName: "David Brown",
-    totalPrice: "79.99",
-    paymentStatus: "pendente",
-  },
-];
-
 export default function OrdersPage() {
-  const [orders] = useState<Order[]>(sampleOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   const resultsPerPage = 5;
-  const totalResults = 100; // This would come from your API
+
+  // Load orders on component mount
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fetchedOrders = await ordersService.getOrders();
+      setOrders(fetchedOrders);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos');
+      console.error('Error loading orders:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Convert database orders to table format
+  const convertOrdersToTableFormat = (orders: Order[]): TableOrder[] => {
+    return orders.map(order => ({
+      id: `#${order.id}`,
+      productName: order.product_name || 'Produto não encontrado',
+      productType: 'product', // Default type since we don't have product types in our schema
+      buyerName: order.customer_name,
+      totalPrice: `R$ ${order.total_amount.toFixed(2)}`,
+      paymentStatus: order.payment_status === 'paid' ? 'pago' : 
+                    order.payment_status === 'pending' ? 'pendente' : 'falhou'
+    }));
+  };
+
+  const filteredOrders = orders.filter(order =>
+    order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (order.product_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const tableOrders = convertOrdersToTableFormat(filteredOrders);
+  const totalResults = filteredOrders.length;
   const totalPages = Math.ceil(totalResults / resultsPerPage);
+  const startIndex = (currentPage - 1) * resultsPerPage;
+  const endIndex = startIndex + resultsPerPage;
+  const paginatedOrders = tableOrders.slice(startIndex, endIndex);
 
   const handleOrderSelect = (orderIds: string[]) => {
     setSelectedOrders(orderIds);
@@ -83,12 +85,6 @@ export default function OrdersPage() {
     console.log("Adding new order");
     // TODO: Implement add new order functionality
   };
-
-  const filteredOrders = orders.filter(order =>
-    order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.buyerName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="bg-slate-950 flex">
@@ -141,19 +137,35 @@ export default function OrdersPage() {
 
         {/* Orders Table */}
         <div className="px-8 pb-8">
-          <OrdersTable
-            orders={filteredOrders}
-            onOrderSelect={handleOrderSelect}
-          />
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-gray-400">Carregando pedidos...</div>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-red-400">Erro: {error}</div>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-gray-400">Nenhum pedido encontrado</div>
+            </div>
+          ) : (
+            <>
+              <OrdersTable
+                orders={paginatedOrders}
+                onOrderSelect={handleOrderSelect}
+              />
 
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalResults={totalResults}
-            resultsPerPage={resultsPerPage}
-            onPageChange={setCurrentPage}
-          />
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalResults={totalResults}
+                resultsPerPage={resultsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          )}
         </div>
       </main>
     </div>
