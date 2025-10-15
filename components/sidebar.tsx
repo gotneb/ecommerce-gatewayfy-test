@@ -39,7 +39,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                      'Usuário';
 
   return (
-    <aside className="flex flex-col w-64 min-h-dvh border-r border-gray-800 bg-gray-950">
+    <aside className="flex flex-col w-64 min-h-dvh border-r border-gray-700 bg-slate-950">
       {/* Header / User info */}
       <header className="flex items-center gap-4 p-4 border-b border-gray-800">
         <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden">
@@ -71,8 +71,8 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                   href={path}
                   className={`flex items-center gap-3 p-4 font-semibold text-md transition-colors ${
                     isActive
-                      ? "bg-white text-blue-500"
-                      : "hover:bg-white hover:text-blue-500"
+                      ? "bg-violet-600 text-white"
+                      : "hover:bg-gray-800 hover:text-white"
                   }`}
                 >
                   <Icon className="shrink-0" />
