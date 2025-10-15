@@ -2,7 +2,13 @@
 <img width="1872" height="919" alt="Screenshot from 2025-10-15 17-15-26" src="https://github.com/user-attachments/assets/ff44a56f-3ec3-4e98-9f89-99b0b7fb771a" />
 
 > **Plataforma completa de e-commerce com pagamentos Stripe, autenticação Supabase e dashboard administrativo**
+<div align="center">
 
+![Stripe](https://img.shields.io/badge/Stripe-5469d4?style=for-the-badge&logo=stripe&logoColor=ffffff)
+![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+
+</div>
 ---
 
 ## 🚀 **COMO TESTAR O PROJETO** (Para Recrutadores)
