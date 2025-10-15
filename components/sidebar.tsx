@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import Image from "next/image";
 
 type SidebarProps = {
   currentPath: string;
@@ -43,9 +44,11 @@ export default function Sidebar({ currentPath }: SidebarProps) {
       {/* Header / User info */}
       <header className="flex items-center gap-4 p-4 border-b border-gray-800">
         <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden">
-          <img 
+          <Image 
             src="https://plus.unsplash.com/premium_photo-1670282393309-70fd7f8eb1ef?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687" 
             alt="Profile" 
+            width={48}
+            height={48}
             className="w-full h-full object-cover"
           />
         </div>

@@ -37,7 +37,7 @@ export class ProductsService {
 
       console.log('Uploading image to path:', filePath);
 
-      const { data, error } = await this.supabase.storage
+      const { error } = await this.supabase.storage
         .from('products')
         .upload(filePath, file);
 

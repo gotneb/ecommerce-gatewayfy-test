@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
       // Create order in database
       try {
-        const supabase = createClient();
+        const supabase = await createClient();
         
         // Get the product details
         const { data: product } = await supabase

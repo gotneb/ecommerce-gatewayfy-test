@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { getStripe } from "@/lib/stripe-client";
-import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
   CardElement,
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
+import Image from "next/image";
 
 interface Product {
   id: string;
@@ -188,7 +188,7 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
   const handleContinueToPayment = () => {
     try {
       // Validate form data
-      const validatedData = buyerInfoSchema.parse(formData);
+      buyerInfoSchema.parse(formData);
       
       setErrors({});
       setShowPaymentForm(true);
@@ -220,9 +220,11 @@ export default function ProductPurchasePage({ product }: ProductPurchasePageProp
               {/* Product Image */}
               <div className="flex-1">
                 {product.imageUrl ? (
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.title}
+                    width={400}
+                    height={256}
                     className="w-full h-64 object-cover rounded-lg"
                   />
                 ) : (
