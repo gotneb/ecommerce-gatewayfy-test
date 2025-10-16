@@ -1,82 +1,7 @@
 import Sidebar from "@/components/sidebar";
 import OrderDetailsPage from "@/components/OrderDetailsPage";
-
-interface OrderDetails {
-  id: string;
-  productName: string;
-  description: string;
-  price: string;
-  status: "pago" | "pendente" | "falhou";
-  customerName: string;
-  email: string;
-  phone: string;
-  shippingAddress: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  billingAddress: string;
-}
-
-// TODO: Fetch from database
-const sampleOrderDetails: OrderDetails[] = [
-  {
-    id: "#ORD-12345",
-    productName: "Premium SaaS Plan",
-    description: "Our most popular plan for growing businesses, offering advanced features and priority support.",
-    price: "R$99,00",
-    status: "pago",
-    customerName: "Olivia Rhye",
-    email: "olivia@example.com",
-    phone: "(+55) 11 99999-9999",
-    shippingAddress: {
-      street: "123 Main Street",
-      city: "São Paulo",
-      state: "SP",
-      zipCode: "01234-567",
-      country: "Brasil",
-    },
-    billingAddress: "Same as shipping address",
-  },
-  {
-    id: "#ORD-12346",
-    productName: "Basic SaaS Plan",
-    description: "Perfect for small teams getting started with essential features and support.",
-    price: "R$49,00",
-    status: "pendente",
-    customerName: "João Silva",
-    email: "joao@example.com",
-    phone: "(+55) 21 88888-8888",
-    shippingAddress: {
-      street: "456 Oak Avenue",
-      city: "Rio de Janeiro",
-      state: "RJ",
-      zipCode: "20000-000",
-      country: "Brasil",
-    },
-    billingAddress: "Same as shipping address",
-  },
-  {
-    id: "#ORD-12347",
-    productName: "Enterprise SaaS Plan",
-    description: "Comprehensive solution for large organizations with advanced needs and dedicated support.",
-    price: "R$199,00",
-    status: "falhou",
-    customerName: "Maria Santos",
-    email: "maria@example.com",
-    phone: "(+55) 31 77777-7777",
-    shippingAddress: {
-      street: "789 Pine Street",
-      city: "Belo Horizonte",
-      state: "MG",
-      zipCode: "30000-000",
-      country: "Brasil",
-    },
-    billingAddress: "Same as shipping address",
-  },
-];
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
 
 interface OrderDetailsPageProps {
   params: Promise<{
@@ -84,34 +9,93 @@ interface OrderDetailsPageProps {
   }>;
 }
 
+// Map database payment status to component status
+function mapPaymentStatus(status: 'pending' | 'paid' | 'failed'): "pago" | "pendente" | "falhou" {
+  switch (status) {
+    case 'paid':
+      return 'pago';
+    case 'pending':
+      return 'pendente';
+    case 'failed':
+      return 'falhou';
+    default:
+      return 'pendente';
+  }
+}
+
 export default async function OrderDetailsRoute({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
   
-  // Find the order by ID (handle both with and without # symbol)
-  const order = sampleOrderDetails.find(o => o.id === orderId || o.id === `#${orderId}`);
-  
-  // If order not found, show 404
-  if (!order) {
+  try {
+    // Create server-side Supabase client
+    const supabase = await createClient();
+    
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      notFound();
+    }
+
+    // Fetch specific order with product details
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        products!inner(
+          name,
+          image_url
+        )
+      `)
+      .eq('id', orderId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching order:', error);
+      if (error.code === 'PGRST116') {
+        notFound(); // Order not found
+      }
+      throw new Error(`Failed to fetch order: ${error.message}`);
+    }
+
+    // If order not found, show 404
+    if (!order) {
+      notFound();
+    }
+
+    // Convert database order to component interface
+    const orderDetails = {
+      id: order.id,
+      productName: order.products?.name || 'Produto',
+      description: 'Produto adquirido através da plataforma',
+      price: `R$ ${order.total_amount.toFixed(2).replace('.', ',')}`,
+      status: mapPaymentStatus(order.payment_status),
+      customerName: order.customer_name || 'Cliente',
+      email: order.customer_email || 'email@example.com',
+      phone: '(00) 00000-0000', // Not stored in current schema
+      shippingAddress: {
+        street: order.customer_address || 'Endereço não informado',
+        city: 'Cidade',
+        state: 'Estado',
+        zipCode: '00000-000',
+        country: 'Brasil',
+      },
+      billingAddress: order.customer_address || 'Endereço de cobrança não informado',
+    };
+
     return (
-      <div className="bg-slate-950 flex min-h-screen">
+      <div className="bg-slate-950 flex">
         <Sidebar currentPath="/orders" />
-        <div className="flex items-center justify-center w-full">
-          <div className="text-center">
-            <h1 className="text-white text-4xl font-bold mb-4">Pedido não encontrado</h1>
-            <p className="text-gray-400 text-lg">O pedido que você está procurando não existe.</p>
-          </div>
-        </div>
+        <main className="w-full">
+          <OrderDetailsPage order={orderDetails} />
+        </main>
       </div>
     );
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    notFound();
   }
-
-  return (
-    <div className="bg-slate-950 flex">
-      <Sidebar currentPath="/orders" />
-      <main className="w-full">
-        <OrderDetailsPage order={order} />
-      </main>
-    </div>
-  );
 }
 
