@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductPurchasePage from "@/components/ProductPurchasePage";
@@ -8,6 +9,35 @@ interface BuyProductPageProps {
   params: Promise<{
     "product-id": string;
   }>;
+}
+
+export async function generateMetadata({ params }: BuyProductPageProps): Promise<Metadata> {
+  const { "product-id": productId } = await params;
+  
+  try {
+    const { products: products } = await productsService.getAllActiveProducts();
+    const product = products?.find(p => p.id === productId);
+    
+    if (product) {
+      return {
+        title: `${product.name} - Comprar Agora`,
+        description: product.description || `Compre ${product.name} por apenas R$ ${product.price.toFixed(2)}. Produto de qualidade com pagamento seguro.`,
+        keywords: ["comprar", product.name, "e-commerce", "produto", "pagamento seguro"],
+        openGraph: {
+          title: `${product.name} - Loja Legal`,
+          description: product.description || `Compre ${product.name} por apenas R$ ${product.price.toFixed(2)}.`,
+          images: product.image_url ? [product.image_url] : ["/og-product.png"],
+        },
+      };
+    }
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+  }
+  
+  return {
+    title: "Produto não encontrado",
+    description: "O produto que você está procurando não foi encontrado.",
+  };
 }
 
 export default async function BuyProductPage({ 
