@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://lojalegal.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /auth/
+Disallow: /products/
+Disallow: /orders/
+
+# Allow public pages
+Allow: /buy/
+Allow: /

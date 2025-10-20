@@ -1,41 +1,38 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Product, productsService } from "@/lib/products";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function BuyPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const metadata: Metadata = {
+  title: "Catálogo de Produtos",
+  description: "Explore nossa seleção de produtos premium. Encontre o que você precisa com preços competitivos e qualidade garantida.",
+  keywords: ["produtos", "catálogo", "compras", "e-commerce", "loja online"],
+  openGraph: {
+    title: "Catálogo de Produtos - Loja Legal",
+    description: "Explore nossa seleção de produtos premium. Encontre o que você precisa com preços competitivos e qualidade garantida.",
+    images: ["/og-catalog.png"],
+  },
+};
 
-  useEffect(() => {
-    loadAllProducts();
-  }, []);
-
-  const loadAllProducts = async () => {
-    setIsLoading(true);
-    setError(null);
+export default async function BuyPage() {
+  let products: Product[] = [];
+  let error: string | null = null;
+  
+  try {
+    const { products: fetchedProducts, error: fetchError } = await productsService.getAllActiveProducts();
     
-    try {
-      const { products: fetchedProducts, error } = await productsService.getAllActiveProducts();
-      
-      if (error) {
-        setError(error);
-        console.error('Error loading products:', error);
-      } else {
-        setProducts(fetchedProducts || []);
-      }
-    } catch (err) {
-      setError('Erro inesperado ao carregar produtos');
-      console.error('Unexpected error loading products:', err);
-    } finally {
-      setIsLoading(false);
+    if (fetchError) {
+      error = fetchError;
+      console.error('Error loading products:', fetchError);
+    } else {
+      products = fetchedProducts || [];
     }
-  };
+  } catch (err) {
+    error = 'Erro inesperado ao carregar produtos';
+    console.error('Unexpected error loading products:', err);
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -57,23 +54,16 @@ export default function BuyPage() {
         {/* Products Section */}
         <div className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600 mx-auto mb-4"></div>
-                  <p className="text-gray-400">Carregando produtos...</p>
-                </div>
-              </div>
-            ) : error ? (
+            {error ? (
               <div className="text-center py-12">
                 <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md mx-auto">
                   <p className="text-red-400 mb-4">{error}</p>
-                  <button
-                    onClick={loadAllProducts}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  <a
+                    href="/buy"
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors inline-block"
                   >
-                    Tentar novamente
-                  </button>
+                    Recarregar página
+                  </a>
                 </div>
               </div>
             ) : products.length === 0 ? (
